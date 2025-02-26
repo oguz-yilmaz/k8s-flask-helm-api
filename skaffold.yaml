@@ -1,0 +1,31 @@
+apiVersion: skaffold/v4beta5
+kind: Config
+build:
+  artifacts:
+  - image: flask-api
+    docker:
+      dockerfile: Dockerfile
+    sync:
+      manual:
+        - src: "app.py"
+          dest: "/app"
+        - src: "migrations/**/*"
+          dest: "/app/migrations"
+        - src: "requirements.txt"
+          dest: "/app"
+        - src: "src/**/*.py"
+          dest: "/app/src"
+deploy:
+  helm:
+    releases:
+    - name: flask-api
+      chartPath: ./flask-api-chart
+      namespace: flask-api
+      valuesFiles:
+      - ./flask-api-chart/values.yaml
+portForward:
+  - resourceType: service
+    resourceName: flask-api
+    namespace: flask-api
+    port: 80
+    localPort: 5000

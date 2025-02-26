@@ -1,0 +1,11 @@
+apiVersion: v2
+name: flask-api
+description: A Helm chart for Flask String api with MySQL
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+    - name: mysql
+      version: "9.14.1"
+      repository: https://charts.bitnami.com/bitnami
+      condition: mysql.enabled # values?

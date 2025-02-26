@@ -1,0 +1,44 @@
+# Default values for the Flask String Api
+replicaCount: 1
+
+image:
+    repository: flask-api
+    tag: latest
+    # pullPolicy: IfNotPresent
+    pullPolicy: Never
+
+service:
+    type: ClusterIP
+    port: 80
+    targetPort: 5000
+
+resources:
+    limits:
+        cpu: 100m
+        memory: 128Mi
+    requests:
+        cpu: 50m
+        memory: 64Mi
+
+# Pod-specific configurations
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Application-specific configurations
+app:
+    config: {}
+
+# MySQL configuration
+mysql:
+    enabled: true
+    auth:
+        existingSecret: mysql-credentials
+        database: strings_db
+    primary:
+        persistence:
+            size: 8Gi
+    initContainer:
+            enabled: true
+

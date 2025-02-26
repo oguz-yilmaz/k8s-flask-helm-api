@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "flask-api.fullname" . }}-migration
+  labels:
+    {{- include "flask-api.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "flask-api.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-mysql
+          image: "bitnami/mysql:8.0.35-debian-11-r0"
+          command: ['sh', '-c', 'until mysql -h{{ .Release.Name }}-mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "SELECT 1"; do echo waiting for mysql; sleep 2; done']
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mysql.auth.existingSecret }}
+                  key: mysql-root-password
+      containers:
+        - name: migrations
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - flask
+            - db
+            - upgrade
+          env:
+            - name: MYSQL_HOST
+              value: {{ .Release.Name }}-mysql
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mysql.auth.database }}
+            - name: MYSQL_USER
+              value: root
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mysql.auth.existingSecret }}
+                  key: mysql-root-password
+            - name: FLASK_APP
+              value: app.py
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+  backoffLimit: 3
