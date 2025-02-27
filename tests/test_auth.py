@@ -249,10 +249,10 @@ def test_rate_limiting_on_login(client):
             json={"email": "test@example.com", "password": "anypassword"},
             content_type="application/json",
         )
-        if response.status_code == 429:
+        if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             break
 
-    assert response.status_code == 429
+    assert response.status_code == HTTPStatus.TOO_MANY_REQUESTS
 
 
 def test_rate_limiting_on_register(client):
@@ -262,10 +262,10 @@ def test_rate_limiting_on_register(client):
             json={"email": f"user{i}@example.com", "password": "password123"},
             content_type="application/json",
         )
-        if response.status_code == 429:
+        if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             break
 
-    assert response.status_code == 429
+    assert response.status_code == HTTPStatus.TOO_MANY_REQUESTS
 
 
 def test_malformed_authorization_header(client):
