@@ -61,14 +61,19 @@ def test_request_size_limit(client, auth_token):
     assert b"Request too large" in response.data
 
 
-def test_content_type_validation(client):
+def test_content_type_validation(client, app_with_db):
     """Test content type validation"""
-    # Public: Doesn't require authentication but accepts JSON
-    response = client.post(
-        "/api/v1/auth/login", data="not-json", content_type="text/plain"
-    )
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-    assert b"Request must be JSON" in response.data
+    with app_with_db.app_context():
+        from src.factory import limiter
+
+        limiter.reset()
+
+        response = client.post(
+            "/api/v1/auth/login", data="not-json", content_type="text/plain"
+        )
+
+        assert response.status_code == 400
+        assert b"Request must be JSON" in response.data
 
 
 def test_rate_limiting(client):
@@ -80,16 +85,16 @@ def test_rate_limiting(client):
     )
 
     assert (
-        response.status_code != 500
+        response.status_code != HTTPStatus.INTERNAL_SERVER_ERROR
     ), f"Initial request failed with error: {response.data}"
 
     # Make requests until we hit the rate limit
     for i in range(105):
         response = client.get("/api/v1/strings/random")
 
-        if response.status_code == 429:
+        if response.status_code == HTTPStatus.TOO_MANY_REQUESTS:
             break
 
     assert (
-        response.status_code == 429
+        response.status_code == HTTPStatus.TOO_MANY_REQUESTS
     ), f"Expected rate limit (429) but got {response.status_code}"
