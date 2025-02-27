@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 @limiter.limit("100 per minute")
 def save_string():
     try:
-        # Check if request has valid JSON
         if not request.is_json:
             return Response(
                 response=json.dumps(
@@ -51,7 +50,8 @@ def save_string():
                 mimetype="application/json",
             )
 
-        if len(input_string) > 10000:  # Set a reasonable limit
+        # TODO: get from config
+        if len(input_string) > 10000:
             return Response(
                 response=json.dumps(
                     {"error": "String exceeds maximum length", "status": "failed"}
