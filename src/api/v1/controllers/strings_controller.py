@@ -4,14 +4,17 @@ from http import HTTPStatus
 
 from flask import Blueprint, Response, json, request
 
+from src.api.v1.middlewares.auth_middleware import jwt_required
 from src.core.models.string import String
-from src.factory import db
+from src.factory import db, limiter
 
 strings = Blueprint("strings", __name__)
 logger = logging.getLogger(__name__)
 
 
+@limiter.limit("100 per minute")
 @strings.route("/save", methods=["POST"])
+@jwt_required
 def save_string():
     try:
         # Check if request has valid JSON
@@ -75,7 +78,6 @@ def save_string():
         )
 
     except Exception as e:
-        # Rollback the session in case of error
         db.session.rollback()
         logger.error(f"Error saving string: {e}")
         return Response(
@@ -85,6 +87,7 @@ def save_string():
         )
 
 
+@limiter.limit("100 per minute")
 @strings.route("/random", methods=["GET"])
 def get_random_string():
     try:
@@ -97,7 +100,6 @@ def get_random_string():
                 mimetype="application/json",
             )
 
-        # Get a random string
         random_offset = random.randint(0, count - 1)
         random_string = db.session.query(String).offset(random_offset).first()
 
