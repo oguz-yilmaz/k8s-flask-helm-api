@@ -1,1 +1,1 @@
-from src.api.v1 import app, config
+from src.factory import app, config

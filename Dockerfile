@@ -19,5 +19,5 @@ COPY . .
 
 EXPOSE 5000
 
-# TODO: use gunicorn for production
-CMD ["python", "app.py"]
+# Use gunicorn for production
+CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:5000", "app:app"]

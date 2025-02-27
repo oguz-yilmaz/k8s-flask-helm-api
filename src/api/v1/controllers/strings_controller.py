@@ -4,8 +4,8 @@ from http import HTTPStatus
 
 from flask import Blueprint, Response, json, request
 
-from src.api.v1 import db
 from src.core.models.string import String
+from src.factory import db
 
 strings = Blueprint("strings", __name__)
 logger = logging.getLogger(__name__)

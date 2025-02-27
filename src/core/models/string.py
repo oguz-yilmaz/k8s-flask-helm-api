@@ -1,4 +1,4 @@
-from src.api.v1 import db
+from src.factory import db
 
 
 class String(db.Model):

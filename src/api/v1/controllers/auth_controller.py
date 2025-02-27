@@ -6,8 +6,8 @@ import jwt
 from flask import Blueprint, Response, json, request
 from flask_bcrypt import Bcrypt
 
-from src.api.v1 import bcrypt, db
 from src.core.models.user import User
+from src.factory import bcrypt, db
 
 # user controller blueprint to be registered with api blueprint
 users = Blueprint("auth", __name__)

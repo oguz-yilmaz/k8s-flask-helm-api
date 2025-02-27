@@ -1,6 +1,6 @@
 import uuid
 
-from src.api.v1 import db
+from src.factory import db
 
 
 class User(db.Model):
