@@ -12,9 +12,9 @@ strings = Blueprint("strings", __name__)
 logger = logging.getLogger(__name__)
 
 
-@limiter.limit("100 per minute")
 @strings.route("/save", methods=["POST"])
 @jwt_required
+@limiter.limit("100 per minute")
 def save_string():
     try:
         # Check if request has valid JSON
@@ -87,8 +87,8 @@ def save_string():
         )
 
 
-@limiter.limit("100 per minute")
 @strings.route("/random", methods=["GET"])
+@limiter.limit("100 per minute")
 def get_random_string():
     try:
         count = db.session.query(String).count()

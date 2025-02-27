@@ -11,8 +11,8 @@ auth = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)
 
 
-@limiter.limit("10 per minute")
 @auth.route("/login", methods=["POST"])
+@limiter.limit("10 per minute")
 def handle_login():
     try:
         # Validate request data
@@ -77,8 +77,8 @@ def handle_login():
         )
 
 
-@limiter.limit("10 per minute")
 @auth.route("/register", methods=["POST"])
+@limiter.limit("10 per minute")
 def handle_register():
     try:
         # Validate request
