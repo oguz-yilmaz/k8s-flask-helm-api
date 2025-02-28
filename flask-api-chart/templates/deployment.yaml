@@ -18,6 +18,7 @@ spec:
       labels:
         {{- include "flask-api.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ if .Values.serviceAccount.name }}{{ .Values.serviceAccount.name }}{{ else }}{{ include "flask-api.fullname" . }}{{ end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
