@@ -1,5 +1,7 @@
 # Testing the App
 
+For installation please refer to the [INSTALLATION.md](INSTALLATION.md) file.
+
 ## Auth Endpoints
 
 ### Register a new user
@@ -47,28 +49,13 @@ curl -X POST http://localhost:5000/api/v1/strings/save \
   }'
 ```
 
-# Get a random string (public endpoint - no auth required)
+### Get a random string (public endpoint - no auth required)
 
 ```bash
 curl -X GET http://localhost:5000/api/v1/strings/random
 ```
 
-# Testing with In-Memory SQLite Database
-
-This guide explains how to run tests for the Flask String API using an
-in-memory SQLite database instead of MySQL.
-
-## Overview
-
-The application has been configured to use an in-memory SQLite database for
-testing purposes. This approach has several advantages:
-
-- No need to set up a MySQL server for testing
-- Tests run faster
-- Each test runs in isolation
-- No cleanup required after tests
-
-## Running Tests
+# Running Tests
 
 1. Set the environment to "test":
 
