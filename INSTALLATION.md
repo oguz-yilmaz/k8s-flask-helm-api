@@ -121,6 +121,9 @@ Download from https://github.com/bitnami-labs/sealed-secrets/releases
 
 ### 1. Set up secrets
 
+If you're fine with using the pre-configured MySQL root
+password[mysecretpassword], you can skip this step.
+
 Run the setup script to create necessary Kubernetes secrets:
 
 ```bash
@@ -130,7 +133,7 @@ chmod +x setup-secrets.sh
 
 Follow the prompts to set up your MySQL credentials.
 
-### 2. Deploy with Helm
+### 2. Deploy the app
 
 Install the application using Helm:
 
@@ -138,7 +141,7 @@ Install the application using Helm:
 helm install flask-api ./flask-api-chart -n flask-api
 ```
 
-Or use Skaffold for development:
+**Or use Skaffold for local development(Recommended):**
 
 ```bash
 skaffold dev
@@ -160,33 +163,5 @@ The API will be available at:
 - Get a random string: GET from http://localhost:5000/api/v1/strings/random
 - API Documentation: http://localhost:5000/docs
 
-Example using curl:
+For detailed usage refer to the [README.md](README.md) file.
 
-```bash
-# Save a string
-curl -X POST http://localhost:5000/api/v1/strings/save \
-  -H "Content-Type: application/json" \
-  -d '{"string": "Hello, World!"}'
-
-# Get a random string
-curl http://localhost:5000/api/v1/strings/random
-```
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. Check pod status:
-   ```bash
-   kubectl get pods -n flask-api
-   ```
-
-2. Check pod logs:
-   ```bash
-   kubectl logs -n flask-api <pod-name>
-   ```
-
-3. Ensure migrations have run:
-   ```bash
-   kubectl logs -n flask-api flask-api-migrations-xxxxx
-   ```
