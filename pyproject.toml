@@ -31,6 +31,7 @@ dependencies = [
     "flask-swagger-ui==4.11.1",
     "gunicorn==20.1.0",
     "flask-limiter==3.5.0",
+    "pydantic>=2.5.0",
 ]
 
 [project.optional-dependencies]

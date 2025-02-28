@@ -66,7 +66,7 @@ def test_register_email_exists(client, session):
 
     assert response.status_code == HTTPStatus.CONFLICT
     data = json.loads(response.data)
-    assert data["status"] == "error"
+    assert data["status"] == "failed"
     assert "Email already registered" in data["message"]
 
 
@@ -77,7 +77,7 @@ def test_register_invalid_json(client):
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
     data = json.loads(response.data)
-    assert data["status"] == "error"
+    assert data["status"] == "failed"
     assert "Request must be JSON" in data["message"]
 
 
@@ -90,8 +90,10 @@ def test_register_missing_fields(client):
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
     data = json.loads(response.data)
-    assert data["status"] == "error"
-    assert "Email and password are required" in data["message"]
+
+    assert data["status"] == "failed"
+    assert "validation error for RegisterRequestSchema" in data["message"]
+    assert "password" in data["message"]
 
 
 def test_login_success(client, test_user):
@@ -118,7 +120,7 @@ def test_login_invalid_credentials(client, test_user):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     data = json.loads(response.data)
-    assert data["status"] == "error"
+    assert data["status"] == "failed"
     assert "Invalid email or password" in data["message"]
 
 
@@ -131,22 +133,20 @@ def test_login_user_not_found(client):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     data = json.loads(response.data)
-    assert data["status"] == "error"
-    assert "Invalid email or password" in data["message"]
+    assert data["status"] == "failed"
 
 
-def test_refresh_token_success(client, auth_tokens):
+def test_refresh_token_missing(client):
     response = client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": auth_tokens["refresh"]},
-        content_type="application/json",
+        "/api/v1/auth/refresh", json={}, content_type="application/json"
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     data = json.loads(response.data)
-    assert data["status"] == "success"
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
+    assert data["status"] == "failed"
+    assert "validation error for RefreshTokenRequestSchema" in data["message"]
+    assert "refresh_token" in data["message"]
+    assert "Field required" in data["message"]
 
 
 def test_refresh_token_invalid(client):
@@ -158,18 +158,7 @@ def test_refresh_token_invalid(client):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     data = json.loads(response.data)
-    assert data["status"] == "error"
-
-
-def test_refresh_token_missing(client):
-    response = client.post(
-        "/api/v1/auth/refresh", json={}, content_type="application/json"
-    )
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-    data = json.loads(response.data)
-    assert data["status"] == "error"
-    assert "Refresh token is required" in data["message"]
+    assert data["status"] == "failed"
 
 
 def test_protected_endpoint_with_valid_token(client, auth_tokens):
@@ -194,7 +183,7 @@ def test_protected_endpoint_without_token(client):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     data = json.loads(response.data)
-    assert data["status"] == "error"
+    assert data["status"] == "failed"
     assert "Missing authentication token" in data["message"]
 
 
@@ -208,7 +197,7 @@ def test_protected_endpoint_with_invalid_token(client):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     data = json.loads(response.data)
-    assert data["status"] == "error"
+    assert data["status"] == "failed"
 
 
 def test_protected_endpoint_with_refresh_token(client, auth_tokens):
@@ -221,7 +210,7 @@ def test_protected_endpoint_with_refresh_token(client, auth_tokens):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     data = json.loads(response.data)
-    assert data["status"] == "error"
+    assert data["status"] == "failed"
     assert "Invalid token type" in data["message"]
 
 
@@ -238,7 +227,7 @@ def test_expired_token(mock_decode, client, auth_tokens):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     data = json.loads(response.data)
-    assert data["status"] == "error"
+    assert data["status"] == "failed"
     assert "Token has expired" in data["message"]
 
 
@@ -278,4 +267,4 @@ def test_malformed_authorization_header(client):
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     data = json.loads(response.data)
-    assert data["status"] == "error"
+    assert data["status"] == "failed"

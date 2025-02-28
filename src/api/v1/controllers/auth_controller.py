@@ -1,11 +1,20 @@
 import logging
 from http import HTTPStatus
 
-from flask import Blueprint, Response, json, request
+from flask import Blueprint, request
+from pydantic import ValidationError
 
 from src.core.models.user import User
+from src.core.schemas.auth import (
+    LoginRequestSchema,
+    RefreshTokenRequestSchema,
+    RegisterRequestSchema,
+    TokenPayloadSchema,
+    TokenResponseSchema,
+)
 from src.core.services.jwt_service import JWTService
 from src.factory import bcrypt, db, limiter
+from src.utils import create_error_response, create_success_response
 
 auth = Blueprint("auth", __name__)
 logger = logging.getLogger(__name__)
@@ -15,36 +24,26 @@ logger = logging.getLogger(__name__)
 @limiter.limit("10 per minute")
 def handle_login():
     try:
-        # Validate request data
+        # Validate request format
         if not request.is_json:
-            return Response(
-                response=json.dumps(
-                    {"status": "error", "message": "Request must be JSON"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
+            return create_error_response("Request must be JSON", HTTPStatus.BAD_REQUEST)
+
+        # Validate request data with Pydantic
+        try:
+            login_data = LoginRequestSchema(**request.json)
+        except ValidationError as e:
+            return create_error_response(
+                f"Validation error: {e}", HTTPStatus.BAD_REQUEST
             )
 
-        data = request.json
-        if not all(k in data for k in ["email", "password"]):
-            return Response(
-                response=json.dumps(
-                    {"status": "error", "message": "Email and password are required"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
-            )
-
-        user = User.query.filter_by(email=data["email"]).first()
+        user = User.query.filter_by(email=login_data.email).first()
 
         # Validate credentials
-        if not user or not bcrypt.check_password_hash(user.password, data["password"]):
-            return Response(
-                response=json.dumps(
-                    {"status": "error", "message": "Invalid email or password"}
-                ),
-                status=HTTPStatus.UNAUTHORIZED,
-                mimetype="application/json",
+        if not user or not bcrypt.check_password_hash(
+            user.password, login_data.password
+        ):
+            return create_error_response(
+                "Invalid email or password", HTTPStatus.UNAUTHORIZED
             )
 
         # Generate tokens
@@ -52,28 +51,19 @@ def handle_login():
         access_token = JWTService.create_access_token(user_data)
         refresh_token = JWTService.create_refresh_token(user_data)
 
-        return Response(
-            response=json.dumps(
-                {
-                    "status": "success",
-                    "message": "Login successful",
-                    "access_token": access_token,
-                    "refresh_token": refresh_token,
-                    "token_type": "bearer",
-                }
-            ),
-            status=HTTPStatus.OK,
-            mimetype="application/json",
+        # Create response using Pydantic schema
+        token_response = TokenResponseSchema(
+            message="Login successful",
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
+
+        return create_success_response(token_response.model_dump(), HTTPStatus.OK)
 
     except Exception as e:
         logger.error(f"Login failed: {str(e)}")
-        return Response(
-            response=json.dumps(
-                {"status": "error", "message": "Authentication failed"}
-            ),
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            mimetype="application/json",
+        return create_error_response(
+            "Authentication failed", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
 
@@ -81,39 +71,29 @@ def handle_login():
 @limiter.limit("10 per minute")
 def handle_register():
     try:
-        # Validate request
+        # Validate request format
         if not request.is_json:
-            return Response(
-                response=json.dumps(
-                    {"status": "error", "message": "Request must be JSON"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
-            )
+            return create_error_response("Request must be JSON", HTTPStatus.BAD_REQUEST)
 
-        data = request.json
-        if not all(k in data for k in ["email", "password"]):
-            return Response(
-                response=json.dumps(
-                    {"status": "error", "message": "Email and password are required"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
+        # Validate request data with Pydantic
+        try:
+            register_data = RegisterRequestSchema(**request.json)
+        except ValidationError as e:
+            return create_error_response(
+                f"Validation error: {e}", HTTPStatus.BAD_REQUEST
             )
 
         # Check if user exists
-        if User.query.filter_by(email=data["email"]).first():
-            return Response(
-                response=json.dumps(
-                    {"status": "error", "message": "Email already registered"}
-                ),
-                status=HTTPStatus.CONFLICT,
-                mimetype="application/json",
+        if User.query.filter_by(email=register_data.email).first():
+            return create_error_response(
+                "Email already registered", HTTPStatus.CONFLICT
             )
 
         # Create user
-        password_hash = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
-        user = User(email=data["email"], password=password_hash)
+        password_hash = bcrypt.generate_password_hash(register_data.password).decode(
+            "utf-8"
+        )
+        user = User(email=register_data.email, password=password_hash)
         db.session.add(user)
         db.session.commit()
 
@@ -122,26 +102,20 @@ def handle_register():
         access_token = JWTService.create_access_token(user_data)
         refresh_token = JWTService.create_refresh_token(user_data)
 
-        return Response(
-            response=json.dumps(
-                {
-                    "status": "success",
-                    "message": "Registration successful",
-                    "access_token": access_token,
-                    "refresh_token": refresh_token,
-                    "token_type": "bearer",
-                }
-            ),
-            status=HTTPStatus.CREATED,
-            mimetype="application/json",
+        # Create response using Pydantic schema
+        token_response = TokenResponseSchema(
+            message="Registration successful",
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
+
+        return create_success_response(token_response.model_dump(), HTTPStatus.CREATED)
 
     except Exception as e:
         logger.error(f"Registration failed: {str(e)}")
-        return Response(
-            response=json.dumps({"status": "error", "message": "Registration failed"}),
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            mimetype="application/json",
+        db.session.rollback()
+        return create_error_response(
+            "Registration failed", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
 
@@ -149,65 +123,46 @@ def handle_register():
 @auth.route("/refresh", methods=["POST"])
 def refresh_token():
     try:
+        # Validate request format
         if not request.is_json:
-            return Response(
-                response=json.dumps(
-                    {"status": "error", "message": "Request must be JSON"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
-            )
+            return create_error_response("Request must be JSON", HTTPStatus.BAD_REQUEST)
 
-        data = request.json
-        if "refresh_token" not in data:
-            return Response(
-                response=json.dumps(
-                    {"status": "error", "message": "Refresh token is required"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
+        # Validate request data with Pydantic
+        try:
+            refresh_data = RefreshTokenRequestSchema(**request.json)
+        except ValidationError as e:
+            return create_error_response(
+                f"Validation error: {e}", HTTPStatus.BAD_REQUEST
             )
 
         # Validate refresh token
         try:
-            payload = JWTService.decode_refresh_token(data["refresh_token"])
-        except ValueError as e:
-            return Response(
-                response=json.dumps({"status": "error", "message": str(e)}),
-                status=HTTPStatus.UNAUTHORIZED,
-                mimetype="application/json",
-            )
+            payload = JWTService.decode_refresh_token(refresh_data.refresh_token)
+            # Validate payload structure with Pydantic
+            TokenPayloadSchema(**payload)
+        except (ValueError, ValidationError) as e:
+            return create_error_response(str(e), HTTPStatus.UNAUTHORIZED)
 
         # Check if user exists
         user = User.query.filter_by(id=payload["user_id"]).first()
         if not user:
-            return Response(
-                response=json.dumps({"status": "error", "message": "User not found"}),
-                status=HTTPStatus.UNAUTHORIZED,
-                mimetype="application/json",
-            )
+            return create_error_response("User not found", HTTPStatus.UNAUTHORIZED)
 
         # Generate new access token
         user_data = {"user_id": str(user.id), "email": user.email}
         access_token = JWTService.create_access_token(user_data)
 
-        return Response(
-            response=json.dumps(
-                {
-                    "status": "success",
-                    "message": "Token refreshed successfully",
-                    "access_token": access_token,
-                    "token_type": "bearer",
-                }
-            ),
-            status=HTTPStatus.OK,
-            mimetype="application/json",
+        # Create response using Pydantic schema
+        token_response = TokenResponseSchema(
+            message="Token refreshed successfully",
+            access_token=access_token,
+            refresh_token=None,  # Don't generate new refresh token
         )
+
+        return create_success_response(token_response.model_dump(), HTTPStatus.OK)
 
     except Exception as e:
         logger.error(f"Token refresh failed: {str(e)}")
-        return Response(
-            response=json.dumps({"status": "error", "message": "Token refresh failed"}),
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            mimetype="application/json",
+        return create_error_response(
+            "Token refresh failed", HTTPStatus.INTERNAL_SERVER_ERROR
         )

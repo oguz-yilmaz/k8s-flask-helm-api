@@ -27,10 +27,10 @@ limiter = Limiter(
 )
 logger = logging.getLogger(__name__)
 
-current_env = os.getenv("ENV", "dev")
-if current_env == "test":
+current_env = os.getenv("ENV", "development")
+if current_env == "testing":
     config = Config().test_config
-elif current_env == "dev":
+elif current_env == "development":
     config = Config().dev_config
 else:
     config = Config().production_config

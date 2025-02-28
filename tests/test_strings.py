@@ -106,7 +106,7 @@ class TestStringSave:
 
         assert response.status_code == HTTPStatus.UNAUTHORIZED
         data = json.loads(response.data)
-        assert data["status"] == "error"
+        assert data["status"] == "failed"
         assert "Missing authentication token" in data["message"]
 
     def test_save_string_invalid_token(self, client):
@@ -120,7 +120,7 @@ class TestStringSave:
 
         assert response.status_code == HTTPStatus.UNAUTHORIZED
         data = json.loads(response.data)
-        assert data["status"] == "error"
+        assert data["status"] == "failed"
 
     def test_save_string_no_json(self, client, auth_header):
         """Test saving a string without JSON content"""
@@ -134,7 +134,7 @@ class TestStringSave:
         assert response.status_code == HTTPStatus.BAD_REQUEST
         data = json.loads(response.data)
         assert data["status"] == "failed"
-        assert "Request must be JSON" in data["error"]
+        assert "Request must be JSON" in data["message"]
 
     def test_save_empty_string(self, client, auth_header):
         """Test saving an empty string"""
@@ -148,7 +148,8 @@ class TestStringSave:
         assert response.status_code == HTTPStatus.BAD_REQUEST
         data = json.loads(response.data)
         assert data["status"] == "failed"
-        assert "Invalid string format" in data["error"]
+        assert "validation error for StringCreateSchema" in data["message"]
+        assert "at least 1 character" in data["message"]
 
     def test_save_non_string_value(self, client, auth_header):
         """Test saving a non-string value"""
@@ -162,7 +163,8 @@ class TestStringSave:
         assert response.status_code == HTTPStatus.BAD_REQUEST
         data = json.loads(response.data)
         assert data["status"] == "failed"
-        assert "Invalid string format" in data["error"]
+        assert "validation error for StringCreateSchema" in data["message"]
+        assert "valid string" in data["message"]
 
     def test_save_missing_string_field(self, client, auth_header):
         """Test missing string field in request"""
@@ -176,7 +178,8 @@ class TestStringSave:
         assert response.status_code == HTTPStatus.BAD_REQUEST
         data = json.loads(response.data)
         assert data["status"] == "failed"
-        assert "No string provided" in data["error"]
+        assert "validation error for StringCreateSchema" in data["message"]
+        assert "Field required" in data["message"]
 
     def test_save_long_string(self, client, auth_header):
         """Test saving a very long string (just under the limit)"""
@@ -205,7 +208,8 @@ class TestStringSave:
         assert response.status_code == HTTPStatus.BAD_REQUEST
         data = json.loads(response.data)
         assert data["status"] == "failed"
-        assert "String exceeds maximum length" in data["error"]
+        assert "validation error for StringCreateSchema" in data["message"]
+        assert "at most 10000 characters" in data["message"]
 
     def test_save_special_characters(self, client, auth_header):
         """Test saving a string with special characters"""
@@ -221,7 +225,6 @@ class TestStringSave:
         data = json.loads(response.data)
         assert data["status"] == "success"
 
-        # Verify the special characters were preserved
         with client.application.app_context():
             saved_string = String.query.get(data["id"])
             assert saved_string.value == special_string
@@ -238,7 +241,8 @@ class TestStringSave:
         assert response.status_code == HTTPStatus.BAD_REQUEST
         data = json.loads(response.data)
         assert data["status"] == "failed"
-        assert "No string provided" in data["error"]
+        assert "validation error for StringCreateSchema" in data["message"]
+        assert "Field required" in data["message"]
 
     def test_save_string_expired_token(self, client, auth_header):
         """Test saving with an expired token"""
@@ -256,7 +260,7 @@ class TestStringSave:
 
             assert response.status_code == HTTPStatus.UNAUTHORIZED
             data = json.loads(response.data)
-            assert data["status"] == "error"
+            assert data["status"] == "failed"
             assert "Token has expired" in data["message"]
 
     def test_save_multiple_strings_sequentially(self, client, auth_header):

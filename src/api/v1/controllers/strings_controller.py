@@ -2,11 +2,18 @@ import logging
 import random
 from http import HTTPStatus
 
-from flask import Blueprint, Response, json, request
+from flask import Blueprint, request
+from pydantic import ValidationError
 
 from src.api.v1.middlewares.auth_middleware import jwt_required
 from src.core.models.string import String
+from src.core.schemas.strings import (
+    RandomStringResponseSchema,
+    StringCreateResponseSchema,
+    StringCreateSchema,
+)
 from src.factory import db, limiter
+from src.utils import create_error_response, create_success_response
 
 strings = Blueprint("strings", __name__)
 logger = logging.getLogger(__name__)
@@ -17,73 +24,38 @@ logger = logging.getLogger(__name__)
 @limiter.limit("100 per minute")
 def save_string():
     try:
+        # Validate request format
         if not request.is_json:
-            return Response(
-                response=json.dumps(
-                    {"error": "Request must be JSON", "status": "failed"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
+            return create_error_response("Request must be JSON", HTTPStatus.BAD_REQUEST)
+
+        # Validate string data with Pydantic
+        try:
+            string_data = StringCreateSchema(**request.json)
+        except ValidationError as e:
+            logger.info(f"Validation error: {e}")
+            return create_error_response(
+                f"Validation error: {e}", HTTPStatus.BAD_REQUEST
             )
 
-        data = request.get_json()
-
-        # Check for null or missing string data
-        if not data or "string" not in data:
-            return Response(
-                response=json.dumps(
-                    {"error": "No string provided", "status": "failed"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
-            )
-
-        input_string = data["string"]
-
-        # Check if string is empty or too long
-        if not input_string or not isinstance(input_string, str):
-            return Response(
-                response=json.dumps(
-                    {"error": "Invalid string format", "status": "failed"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
-            )
-
-        # TODO: get from config
-        if len(input_string) > 10000:
-            return Response(
-                response=json.dumps(
-                    {"error": "String exceeds maximum length", "status": "failed"}
-                ),
-                status=HTTPStatus.BAD_REQUEST,
-                mimetype="application/json",
-            )
-
-        # Create a new String object
-        new_string = String(value=input_string)
+        # Create and save the string
+        new_string = String(value=string_data.string)
         db.session.add(new_string)
         db.session.commit()
 
-        return Response(
-            response=json.dumps(
-                {
-                    "message": "String saved successfully",
-                    "status": "success",
-                    "id": new_string.id,
-                }
-            ),
-            status=HTTPStatus.CREATED,
-            mimetype="application/json",
+        # Create response using Pydantic schema
+        response_data = StringCreateResponseSchema(
+            message="String saved successfully",
+            status="success",
+            id=new_string.id,
         )
+
+        return create_success_response(response_data.model_dump(), HTTPStatus.CREATED)
 
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error saving string: {e}")
-        return Response(
-            response=json.dumps({"error": "Internal server error", "status": "failed"}),
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            mimetype="application/json",
+        return create_error_response(
+            "Internal server error", HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
 
@@ -94,25 +66,16 @@ def get_random_string():
         count = db.session.query(String).count()
 
         if count == 0:
-            return Response(
-                response=json.dumps({"message": "No strings found"}),
-                status=HTTPStatus.NOT_FOUND,
-                mimetype="application/json",
-            )
+            return create_error_response("No strings found", HTTPStatus.NOT_FOUND)
 
         random_offset = random.randint(0, count - 1)
         random_string = db.session.query(String).offset(random_offset).first()
 
-        return Response(
-            response=json.dumps({"random_string": random_string.value}),
-            status=HTTPStatus.OK,
-            mimetype="application/json",
-        )
+        # Create response using Pydantic schema
+        response_data = RandomStringResponseSchema(random_string=random_string.value)
+
+        return create_success_response(response_data.model_dump(), HTTPStatus.OK)
 
     except Exception as e:
         logger.error(f"Error getting random string: {e}")
-        return Response(
-            response=json.dumps({"error": str(e)}),
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            mimetype="application/json",
-        )
+        return create_error_response(str(e), HTTPStatus.INTERNAL_SERVER_ERROR)
