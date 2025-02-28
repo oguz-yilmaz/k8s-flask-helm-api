@@ -2,6 +2,8 @@
 
 For installation please refer to the [INSTALLATION.md](INSTALLATION.md) file.
 
+For detailed docs refer to the [docs](http://flask-api.local:5000/docs/) url.
+
 ## Auth Endpoints
 
 ### Register a new user
