@@ -1,4 +1,3 @@
-# Source: src/core/services/jwt_service.py
 import os
 from datetime import datetime, timedelta, timezone
 
@@ -15,9 +14,13 @@ class JWTService:
     @staticmethod
     def create_access_token(data: dict) -> str:
         to_encode = data.copy()
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
 
-        to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc), "type": "access"})
+        to_encode.update(
+            {"exp": expire, "iat": datetime.now(timezone.utc), "type": "access"}
+        )
 
         return jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
@@ -26,7 +29,9 @@ class JWTService:
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
-        to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc), "type": "refresh"})
+        to_encode.update(
+            {"exp": expire, "iat": datetime.now(timezone.utc), "type": "refresh"}
+        )
 
         return jwt.encode(to_encode, JWT_REFRESH_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
