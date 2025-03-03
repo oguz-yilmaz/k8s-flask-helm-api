@@ -57,6 +57,10 @@ curl -X POST http://localhost:5000/api/v1/strings/save \
 curl -X GET http://localhost:5000/api/v1/strings/random
 ```
 
+# Monitoring and Logs
+
+For monitoring and logs please refer to the [monitoring-and-logs.md](docs/monitoring-and-logs.md) file.
+
 # Running Tests
 
 ```bash

@@ -6,6 +6,7 @@ from flask import Blueprint, request
 from pydantic import ValidationError
 
 from src.api.v1.middlewares.auth_middleware import jwt_required
+from src.core.metrics import STRINGS_RETRIEVED, STRINGS_SAVED
 from src.core.models.string import String
 from src.core.schemas.strings import (
     RandomStringResponseSchema,
@@ -49,6 +50,8 @@ def save_string():
             id=new_string.id,
         )
 
+        STRINGS_SAVED.inc()
+
         return create_success_response(response_data.model_dump(), HTTPStatus.CREATED)
 
     except Exception as e:
@@ -71,8 +74,9 @@ def get_random_string():
         random_offset = random.randint(0, count - 1)
         random_string = db.session.query(String).offset(random_offset).first()
 
-        # Create response using Pydantic schema
         response_data = RandomStringResponseSchema(random_string=random_string.value)
+
+        STRINGS_RETRIEVED.inc()
 
         return create_success_response(response_data.model_dump(), HTTPStatus.OK)
 

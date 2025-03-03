@@ -1,5 +1,6 @@
-# Default values for the Flask String Api
 replicaCount: 1
+
+namespace: flask-api
 
 image:
     repository: flask-api
@@ -14,11 +15,11 @@ service:
 
 resources:
     limits:
-        cpu: 200m
-        memory: 256Mi
+        cpu: 1000m
+        memory: 1Gi
     requests:
-        cpu: 100m
-        memory: 126Mi
+        cpu: 500m
+        memory: 512Mi
 
 ingress:
     enabled: false
@@ -48,7 +49,6 @@ serviceAccount:
 rbac:
     create: true
 
-# Autoscaling configuration
 autoscaling:
     enabled: true
     minReplicas: 2
@@ -56,17 +56,49 @@ autoscaling:
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80
 
-# Pod-specific configurations
-podAnnotations: {}
+podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5000"
+    prometheus.io/path: "/metrics"
+
 nodeSelector: {}
 tolerations: []
 affinity: {}
 
-# Application-specific configurations
-app:
-    config: {}
+persistence:
+    enabled: false
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    storageClass: ""
 
-# MySQL configuration
+app:
+    environment: "production"
+    loglevel: "INFO"
+    debug: false
+    config: 
+        PROMETHEUS_METRICS: "true"
+
+monitoring:
+    enabled: true
+    serviceMonitor:
+        enabled: true
+        namespace: monitoring
+        interval: 15s
+    grafana:
+        dashboards:
+            namespace: monitoring
+            enabled: true
+
+prometheus:
+    prometheusSpec:
+        configMaps:
+            - name: prometheus-config
+        additionalScrapeConfigs:
+            - job_name: 'kubernetes-pods'
+              scrape_timeout: 30s
+              kubernetes_sd_configs:
+                  - role: pod
+
 mysql:
     enabled: true
     auth:

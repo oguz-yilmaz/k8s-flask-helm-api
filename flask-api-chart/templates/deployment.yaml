@@ -56,6 +56,12 @@ spec:
                   key: jwt-refresh-secret-key
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: log-data
+              mountPath: /app/data
+              readOnly: false
+          {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -67,4 +73,10 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: log-data
+          persistentVolumeClaim:
+            claimName: {{ include "flask-api.fullname" . }}-data
       {{- end }}
