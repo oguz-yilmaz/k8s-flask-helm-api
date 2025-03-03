@@ -2,13 +2,14 @@
 
 For installation please refer to the [INSTALLATION.md](INSTALLATION.md) file.
 
-For detailed docs refer to the [docs](http://flask-api.local:5000/docs/) url.
+For OpenAPI docs refer to the `http://flask-api.local/docs` url once the
+app running.
 
 ## Auth Endpoints
 
 ### Register a new user
 ```bash
-curl -X POST http://localhost:5000/api/v1/auth/register \
+curl -X POST http://flask-api.local/api/v1/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -18,7 +19,7 @@ curl -X POST http://localhost:5000/api/v1/auth/register \
 
 ### Login with existing user
 ```bash
-curl -X POST http://localhost:5000/api/v1/auth/login \
+curl -X POST http://flask-api.local/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -31,7 +32,7 @@ curl -X POST http://localhost:5000/api/v1/auth/login \
 Replace with actual refresh token from login response
 
 ```bash
-curl -X POST http://localhost:5000/api/v1/auth/refresh \
+curl -X POST http://flask-api.local/api/v1/auth/refresh \
   -H "Content-Type: application/json" \
   -d '{
     "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -43,7 +44,7 @@ curl -X POST http://localhost:5000/api/v1/auth/refresh \
 ### Save a string (protected - requires token from login response)
 
 ```bash
-curl -X POST http://localhost:5000/api/v1/strings/save \
+curl -X POST http://flask-api.local/api/v1/strings/save \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -d '{
@@ -54,7 +55,7 @@ curl -X POST http://localhost:5000/api/v1/strings/save \
 ### Get a random string (public endpoint - no auth required)
 
 ```bash
-curl -X GET http://localhost:5000/api/v1/strings/random
+curl -X GET http://flask-api.local/api/v1/strings/random
 ```
 
 # Monitoring and Logs
@@ -62,6 +63,17 @@ curl -X GET http://localhost:5000/api/v1/strings/random
 For monitoring and logs please refer to the [monitoring-and-logs.md](docs/monitoring-and-logs.md) file.
 
 # Running Tests
+
+You can also install the dependencies and run the tests without starting
+the cluster.
+
+```bash
+pyhon -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+Run the tests:
 
 ```bash
 pytest

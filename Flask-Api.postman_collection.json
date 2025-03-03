@@ -1,0 +1,174 @@
+{
+	"info": {
+		"_postman_id": "d36d4256-74e6-4772-80ab-a37d3b16f0c2",
+		"name": "Flask-Api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21300212"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"t@example.com\",\n    \"password\": \"password\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "flask-api.local/api/v1/auth/register",
+							"host": [
+								"flask-api",
+								"local"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"t@example.com\",\n    \"password\": \"password\" \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "flask-api.local/api/v1/auth/login",
+							"host": [
+								"flask-api",
+								"local"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refresh",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiMDFjNTNkMzMtZDkyMy00OTU5LWJkOWYtYzdlMDI0ZTQ0MDE3IiwiZW1haWwiOiJ0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzQxNDc1MDg5LCJpYXQiOjE3NDA4NzAyODksInR5cGUiOiJyZWZyZXNoIn0.R0G0JgGwRUYgqjUI7YZnZe_P2rWJM-xSgwTDfeptHHA\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "flask-api.local/api/v1/auth/refresh",
+							"host": [
+								"flask-api",
+								"local"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "strings",
+			"item": [
+				{
+					"name": "random",
+					"request": {
+						"auth": {
+							"type": "bearer"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "flask-api.local/api/v1/strings/random",
+							"host": [
+								"flask-api",
+								"local"
+							],
+							"path": [
+								"api",
+								"v1",
+								"strings",
+								"random"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "save",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiZjcyMjA3YTItODkxZS00NTljLTk5MjQtYmEzZTFjYjg3ZmNjIiwiZW1haWwiOiJ0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzQxMDI5NTExLCJpYXQiOjE3NDEwMjc3MTEsInR5cGUiOiJhY2Nlc3MifQ.aiQ0ELRx5cdme2qprhSd2G8mhdZENqG0bFvXM1YzZAU",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"string\": \"test string 1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "flask-api.local/api/v1/strings/save",
+							"host": [
+								"flask-api",
+								"local"
+							],
+							"path": [
+								"api",
+								"v1",
+								"strings",
+								"save"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
