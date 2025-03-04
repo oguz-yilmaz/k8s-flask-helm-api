@@ -58,10 +58,6 @@ curl -X POST http://flask-api.local/api/v1/strings/save \
 curl -X GET http://flask-api.local/api/v1/strings/random
 ```
 
-# Monitoring and Logs
-
-For monitoring and logs please refer to the [monitoring-and-logs.md](docs/monitoring-and-logs.md) file.
-
 # Running Tests
 
 You can also install the dependencies and run the tests without starting
