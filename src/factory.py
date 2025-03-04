@@ -61,9 +61,11 @@ def create_app(config=config):
     app.secret_key = config.SECRET_KEY
     app.config["SQLALCHEMY_DATABASE_URI"] = config.SQLALCHEMY_DATABASE_URI
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = config.SQLALCHEMY_TRACK_MODIFICATIONS
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "connect_args": {"charset": "utf8mb4", "collation": "utf8mb4_unicode_ci"}
-    }
+
+    if "mysql" in config.SQLALCHEMY_DATABASE_URI:
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "connect_args": {"charset": "utf8mb4", "collation": "utf8mb4_unicode_ci"}
+        }
 
     # Initialize extensions
     db.init_app(app)

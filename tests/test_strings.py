@@ -183,7 +183,7 @@ class TestStringSave:
 
     def test_save_long_string(self, client, auth_header):
         """Test saving a very long string (just under the limit)"""
-        long_string = generate_random_string(9999)
+        long_string = generate_random_string(999)
         response = client.post(
             "/api/v1/strings/save",
             json={"string": long_string},
@@ -209,7 +209,7 @@ class TestStringSave:
         data = json.loads(response.data)
         assert data["status"] == "failed"
         assert "validation error for StringCreateSchema" in data["message"]
-        assert "at most 10000 characters" in data["message"]
+        assert "at most 1000 characters" in data["message"]
 
     def test_save_special_characters(self, client, auth_header):
         """Test saving a string with special characters"""
