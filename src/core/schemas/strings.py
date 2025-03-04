@@ -17,7 +17,7 @@ class StringSchema(BaseSchema):
 class StringCreateSchema(BaseSchema):
     """Schema for string creation validation"""
 
-    string: str = Field(min_length=1, max_length=10000)
+    string: str = Field(min_length=1, max_length=1000)
 
     @field_validator("string")
     @classmethod

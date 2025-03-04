@@ -12,8 +12,6 @@ class ProductionConfig:
         self.DEBUG = False
         self.PORT = 80
         self.HOST = "0.0.0.0"
-        self.SQLALCHEMY_DATABASE_URI = (
-            f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
-        )
+        self.SQLALCHEMY_DATABASE_URI = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}?charset=utf8mb4"
         self.SQLALCHEMY_TRACK_MODIFICATIONS = False
         self.SECRET_KEY = os.getenv("SECRET_KEY", "production-secret-key")
